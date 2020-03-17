@@ -7,7 +7,7 @@ from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Activation, Flatten, Input, BatchNormalization, Reshape, UpSampling2D
 
 
-class MelGAN(object):
+class MelDNN(object):
     def __init__(self):
         ## -----*----- コンストラクタ -----*----- ##
         return
