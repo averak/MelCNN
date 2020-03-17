@@ -7,23 +7,7 @@ from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Activation, Flatten, Input, BatchNormalization, Reshape, UpSampling2D
 
 
-class MelDNN(object):
+class MelCNN(object):
     def __init__(self):
         ## -----*----- コンストラクタ -----*----- ##
         return
-
-    def build_generator(self):
-        ## -----*----- Generator -----*----- ##
-        model = Sequential([
-
-        ])
-
-        return model
-
-    def build_discriminator(self):
-        ## -----*----- Discriminator -----*----- ##
-        model = Sequential([
-
-        ])
-
-        return model
