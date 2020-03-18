@@ -4,7 +4,7 @@ import yaml
 from glob import glob
 import sklearn
 import librosa
-import melcnn
+from melcnn import MelCNN
 
 
 def transform(x, mu=256):
@@ -68,11 +68,16 @@ if __name__ == '__main__':
         w1 = target_waves[i % len(target_waves)]
         w2 = others_waves[i % len(others_waves)]
         # 合成して正規化
-        mixed = sklearn.preprocessing.minmax_scale(w1 + w2)
+        mixed = w1 + w2
+        #mixed = sklearn.preprocessing.minmax_scale(mixed)
 
         x.append(mixed)
         y.append(w1)
 
     x = np.array(x)
+    x = x.reshape((x.shape[0], config['wave']['fs'], 1, 1))
     y = np.array(y, dtype=np.int8)
+
+    melcnn = MelCNN()
+    melcnn.train(x, y)
 
