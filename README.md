@@ -7,7 +7,8 @@ MelCNN
 Blind sound source separation of multiple speakers on a single channel with Dilated Convolution.
 
 ## Description
-Auto encoder that separates sound sources using Dilated Convolution.
+The purpose of this project is to realize end-to-end blind sound source separation.<br>
+Develop auto encoder using Dilated Convolution.
 
 ## Requiremenst
 * Ubuntu 18.04
