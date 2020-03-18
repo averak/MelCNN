@@ -7,7 +7,7 @@ MelCNN
 Blind sound source separation of multiple speakers on a single channel with Dilated Convolution.
 
 ## Description
-Auto encoder that separates sound sources using Dilated CNN.
+Auto encoder that separates sound sources using Dilated Convolution.
 
 ## Requiremenst
 * Ubuntu 18.04
