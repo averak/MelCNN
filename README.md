@@ -1,6 +1,9 @@
 MelCNN
 ------
 
+[![build](https://github.com/AjxLab/MelCNN/workflows/build/badge.svg)](https://github.com/AjxLab/MelCNN/actions)
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+
 Blind sound source separation of multiple speakers on a single channel with Dilated Convolution.
 
 
