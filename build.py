@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import numpy as np
 import sklearn
 import librosa
@@ -34,8 +35,11 @@ if __name__ == '__main__':
         wav, _ = librosa.load(file, sr=config['wave']['fs'])
         # 無音区間（20dB以下）を除去
         wav, _ = librosa.effects.trim(wav, top_db=20)
+
+        # ゼロパディング
+        n = 8000 - wav.shape[0] % config['wave']['fs']
+        wav = np.append(wav, np.zeros(n))
         # 最小値０，最大値１に正規化
         #wav = sklearn.preprocessing.minmax_scale(wav)
 
-        print(wav.shape)
         print(transform(wav).shape)
