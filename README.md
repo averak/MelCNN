@@ -10,7 +10,12 @@ Blind sound source separation of multiple speakers on a single channel with Dila
 $ git clone <this repo>
 $ cd <this repo>
 
-# python libs
+# create venv
+$ python -m venv venv
+$ source source venv/bin/activate
+
+# install python libs
+$ pip install --upgrade pip
 $ pip install -r requirements.txt
 ```
 
