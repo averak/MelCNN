@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import sklearn
 import librosa
 import yaml
 from glob import glob
@@ -23,12 +24,15 @@ if __name__ == '__main__':
     config = yaml.load(open('config/wave.yml'))
     print(config)
 
-
     target_path = config['path']['target']
     others_path = config['path']['others']
 
     for file in tqdm(glob(target_path+'*.wav')):
-        wav, fs = librosa.load(file, sr=config['wave']['fs'])
+        wav, _ = librosa.load(file, sr=config['wave']['fs'])
+        # 無音区間（20dB以下）を除去
+        wav, _ = librosa.effects.trim(wav, top_db=20)
+        # 正規化
+        wav /= np.abs(wav).max()
+
         print(transform(wav))
-        print(itransform(transform(wav)))
-        print(wav)
+        print(sklearn.preprocessing.minmax_scale(transform(wav)))
