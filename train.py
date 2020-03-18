@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-import os
 import numpy as np
-import sklearn
-import librosa
 import yaml
 from glob import glob
-from tqdm import tqdm
+import sklearn
+import librosa
+import melcnn
 
 
 def transform(x, mu=256):
@@ -28,7 +27,7 @@ def build_wave(files, config):
     ## -----*----- 固定長ベクトルに変換 -----*----- ##
     ret = []
 
-    for file in tqdm(files):
+    for file in files:
         # 音声読み込み
         wav, _ = librosa.load(file, sr=config['wave']['fs'])
         # 無音区間（20dB以下）を除去
@@ -46,7 +45,6 @@ def build_wave(files, config):
         for w in wav:  ret.append(w)
 
     return ret
-
 
 
 if __name__ == '__main__':
@@ -77,3 +75,4 @@ if __name__ == '__main__':
 
     x = np.array(x)
     y = np.array(y, dtype=np.int8)
+

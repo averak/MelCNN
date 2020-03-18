@@ -21,9 +21,9 @@ Develop auto encoder using Dilated Convolution.
 ### Prepare teacher data
 1. Record audio(target/others) with a sampling rate of 8000 Hz
 2. Place them in data/(target/others)
-### Build
+### Train
 ```sh
-$ ./build.py
+$ ./train.py
 ```
 
 
