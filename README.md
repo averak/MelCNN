@@ -10,10 +10,21 @@ Blind sound source separation of multiple speakers on a single channel with Dila
 The purpose of this project is to realize end-to-end blind sound source separation.<br>
 Develop auto encoder using Dilated Convolution.
 
+
 ## Requiremenst
 * Ubuntu 18.04
 * Python 3.7
 * TensorFlow 2
+
+
+## Usage
+### Prepare teacher data
+1. Record audio(target/others) with a sampling rate of 8000 Hz
+2. Place them in data/(target/others)
+### Build
+```sh
+$ ./build.py
+```
 
 
 ## Installation
