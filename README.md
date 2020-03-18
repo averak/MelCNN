@@ -7,6 +7,12 @@ MelCNN
 Blind sound source separation of multiple speakers on a single channel with Dilated Convolution.
 
 
+## Requiremenst
+* Ubuntu 18.04
+* Python 3.7
+* TensorFlow 2
+
+
 ## Installation
 ```sh
 # clone
