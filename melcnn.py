@@ -10,4 +10,24 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Activa
 class MelCNN(object):
     def __init__(self):
         ## -----*----- コンストラクタ -----*----- ##
+        self.build_NN()
         return
+
+
+    def build_NN(self):
+        ## -----*----- モデルを定義 -----*----- ##
+        model = Sequential([
+        ])
+
+        model.compile(
+            optimizer='adam',
+            loss='categorical_crossentropy',
+            metrics=['accuracy']
+        )
+
+        return model
+
+
+
+if __name__ == '__main__':
+    MelCNN()

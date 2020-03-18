@@ -1,7 +1,18 @@
 MelCNN
 ------
 
+[![build](https://github.com/AjxLab/MelCNN/workflows/build/badge.svg)](https://github.com/AjxLab/MelCNN/actions)
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+
 Blind sound source separation of multiple speakers on a single channel with Dilated Convolution.
+
+## Description
+Auto encoder that separates sound sources using Dilated Convolution.
+
+## Requiremenst
+* Ubuntu 18.04
+* Python 3.7
+* TensorFlow 2
 
 
 ## Installation
@@ -10,7 +21,12 @@ Blind sound source separation of multiple speakers on a single channel with Dila
 $ git clone <this repo>
 $ cd <this repo>
 
-# python libs
+# create venv
+$ python -m venv venv
+$ source source venv/bin/activate
+
+# install python libs
+$ pip install --upgrade pip
 $ pip install -r requirements.txt
 ```
 
