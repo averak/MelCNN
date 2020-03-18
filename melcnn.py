@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
 '''
 Blind sound source separation of multiple speakers on a single channel with GAN.
 '''
