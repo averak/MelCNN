@@ -1,2 +1,11 @@
-wave_fs: 8000
-wave_sec: 3.0
+# Wave Config
+wave:
+  fs: 8000
+  sec: 1.0
+
+# Data Path Config
+path:
+  target:
+    data/target/
+  others:
+    data/others/
