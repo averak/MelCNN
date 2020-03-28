@@ -76,3 +76,5 @@ class MelCNN(object):
         ## -----*----- 学習 -----*----- ##
         self.model.fit(x, y, epochs=epochs, batch_size=batch_size)
 
+        self.model.save_weights('model/model.h5')
+
