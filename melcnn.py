@@ -2,9 +2,12 @@
 '''
 Blind sound source separation of multiple speakers on a single channel with GAN.
 '''
+import numpy as np
 import tensorflow.keras
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Activation, Dropout, Input, Multiply, Add, Lambda, Conv2D, Flatten
+import librosa
+from scipy import signal
 
 
 class MelCNN(object):
@@ -77,4 +80,32 @@ class MelCNN(object):
         self.model.fit(x, y, epochs=epochs, batch_size=batch_size)
 
         self.model.save_weights('model/model.h5')
+
+
+
+def transform(x, mu=256):
+    ## -----*----- μ-law変換 -----*----- ##
+    x = x.astype(np.float32)
+    y = np.sign(x) * np.log(1 + mu * np.abs(x)) / np.log(1 + mu)
+    y = np.digitize(y, 2 * np.arange(mu) / mu - 1) - 1
+    return y.astype(np.int32)
+
+
+def itransform(y, mu=256):
+    ## -----*----- 逆μ-law変換 -----*----- ##
+    y = y.astype(np.float32)
+    y = 2 * y / mu - 1
+    x = np.sign(y) / mu * ((1 + mu) ** np.abs(y) - 1)
+    return x.astype(np.float32)
+
+
+def to_spec(x, fs, to_log=True):
+    ## -----*----- スペクトログラム -----*----- ##
+    spec = signal.stft(x, fs=fs, nperseg=256)[2]
+
+    if to_log:
+        spec = np.where(spec == 0, 0.1 ** 10, spec)
+        spec = np.log10(np.abs(spec))
+
+    return spec
 

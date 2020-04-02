@@ -4,23 +4,8 @@ import yaml
 from glob import glob
 import sklearn
 import librosa
-from melcnn import MelCNN
-
-
-def transform(x, mu=256):
-    ## -----*----- μ-law変換 -----*----- ##
-    x = x.astype(np.float32)
-    y = np.sign(x) * np.log(1 + mu * np.abs(x)) / np.log(1 + mu)
-    y = np.digitize(y, 2 * np.arange(mu) / mu - 1) - 1
-    return y.astype(np.int32)
-
-
-def itransform(y, mu=256):
-    ## -----*----- 逆μ-law変換 -----*----- ##
-    y = y.astype(np.float32)
-    y = 2 * y / mu - 1
-    x = np.sign(y) / mu * ((1 + mu) ** np.abs(y) - 1)
-    return x.astype(np.float32)
+from scipy import signal
+from melcnn import *
 
 
 def build_wave(files, config):
@@ -30,6 +15,10 @@ def build_wave(files, config):
     for file in files:
         # 音声読み込み
         wav, _ = librosa.load(file, sr=config['wave']['fs'])
+        print(to_spec(wav, config['wave']['fs']))
+        exit(0)
+
+
         # 無音区間（20dB以下）を除去
         wav, _ = librosa.effects.trim(wav, top_db=20)
         # 最小値０，最大値１に正規化
