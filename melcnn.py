@@ -8,13 +8,14 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Activation, Dropout, Input, Multiply, Add, Lambda, Conv2D, Flatten
 import librosa
 from scipy import signal
+import yaml
 
 
 class MelCNN(object):
-    def __init__(self):
+    def __init__(self, size):
         ## -----*----- コンストラクタ -----*----- ##
         self.filter_size = 2
-        self.img_rows = 8000
+        self.img_rows = size
         self.img_columns = 1
         #self.a_channel = 256
         self.a_channel = 1
@@ -61,7 +62,7 @@ class MelCNN(object):
         skip_out = Conv2D(self.a_channel, (1,1), padding='same', activation='relu')(skip_out)
         prediction = Conv2D(self.a_channel, (1,1), padding='same')(skip_out)
         prediction = Flatten()(prediction)
-        prediction = Dense(8000, activation='softmax')(prediction)
+        prediction = Dense(self.img_rows, activation='softmax')(prediction)
 
         model_wavenet = Model(inputs, prediction)
 
