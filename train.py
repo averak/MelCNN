@@ -54,17 +54,27 @@ if __name__ == '__main__':
     for i in range(n_data):
         w1 = target_waves[i % len(target_waves)]
         w2 = others_waves[i % len(others_waves)]
+        spec1 = to_spec(w1, CONFIG['wave']['fs']).T
+        spec2 = to_spec(w2, CONFIG['wave']['fs']).T
+
+        # 合成
+        for i in range(spec1.shape[0]):
+            mixed = spec1[i] + spec2[i]
+            x.append(mixed)
+            y.append(spec1[i])
+        '''
         # 合成して正規化
         mixed = w1 + w2
         #mixed = sklearn.preprocessing.minmax_scale(mixed)
 
         x.append(mixed)
         y.append(w1)
+        '''
 
     x = np.array(x)
-    x = x.reshape((x.shape[0], SIZE, 1, 1))
+    x = x.reshape((x.shape[0], x.shape[1], 1, 1))
     y = np.array(y, dtype=np.int8)
 
-    melcnn = MelCNN(SIZE)
+    melcnn = MelCNN(x.shape[1])
     melcnn.train(x, y)
 
