@@ -2,16 +2,20 @@
 '''
 Blind sound source separation of multiple speakers on a single channel with GAN.
 '''
+import numpy as np
 import tensorflow.keras
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Activation, Dropout, Input, Multiply, Add, Lambda, Conv2D, Flatten
+import librosa
+from scipy import signal
+import yaml
 
 
 class MelCNN(object):
-    def __init__(self):
+    def __init__(self, size):
         ## -----*----- コンストラクタ -----*----- ##
         self.filter_size = 2
-        self.img_rows = 8000
+        self.img_rows = size
         self.img_columns = 1
         #self.a_channel = 256
         self.a_channel = 1
@@ -58,7 +62,7 @@ class MelCNN(object):
         skip_out = Conv2D(self.a_channel, (1,1), padding='same', activation='relu')(skip_out)
         prediction = Conv2D(self.a_channel, (1,1), padding='same')(skip_out)
         prediction = Flatten()(prediction)
-        prediction = Dense(8000, activation='softmax')(prediction)
+        prediction = Dense(self.img_rows, activation='softmax')(prediction)
 
         model_wavenet = Model(inputs, prediction)
 
@@ -77,4 +81,32 @@ class MelCNN(object):
         self.model.fit(x, y, epochs=epochs, batch_size=batch_size)
 
         self.model.save_weights('model/model.h5')
+
+
+
+def transform(x, mu=256):
+    ## -----*----- μ-law変換 -----*----- ##
+    x = x.astype(np.float32)
+    y = np.sign(x) * np.log(1 + mu * np.abs(x)) / np.log(1 + mu)
+    y = np.digitize(y, 2 * np.arange(mu) / mu - 1) - 1
+    return y.astype(np.int32)
+
+
+def itransform(y, mu=256):
+    ## -----*----- 逆μ-law変換 -----*----- ##
+    y = y.astype(np.float32)
+    y = 2 * y / mu - 1
+    x = np.sign(y) / mu * ((1 + mu) ** np.abs(y) - 1)
+    return x.astype(np.float32)
+
+
+def to_spec(x, fs, to_log=True):
+    ## -----*----- スペクトログラム -----*----- ##
+    spec = signal.stft(x, fs=fs, nperseg=256)[2]
+
+    if to_log:
+        spec = np.where(spec == 0, 0.1 ** 10, spec)
+        spec = np.log10(np.abs(spec))
+
+    return spec
 
