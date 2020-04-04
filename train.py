@@ -60,16 +60,18 @@ if __name__ == '__main__':
         # 合成
         for i in range(spec1.shape[0]):
             mixed = spec1[i] + spec2[i]
-            x.append(mixed)
-            y.append(spec1[i])
-        '''
-        # 合成して正規化
-        mixed = w1 + w2
-        #mixed = sklearn.preprocessing.minmax_scale(mixed)
+            mixed = sklearn.preprocessing.minmax_scale(mixed)
 
-        x.append(mixed)
-        y.append(w1)
-        '''
+            # バイナリマスク
+            mask = []
+            for c1, c2 in zip(spec1[i], spec2[i]):
+                if c1 > c2:
+                    mask.append(1)
+                else:
+                    mask.append(0)
+
+            x.append(mixed)
+            y.append(mask)
 
     x = np.array(x)
     x = x.reshape((x.shape[0], x.shape[1], 1, 1))

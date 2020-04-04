@@ -26,6 +26,7 @@ class MelCNN(object):
         self.n_layer = 10
         self.dilation = [2 ** i for i in range(10)] * 4
 
+        self.model_path = 'model/model.h5'
         self.model = self.wavenet()
 
 
@@ -62,13 +63,15 @@ class MelCNN(object):
         skip_out = Conv2D(self.a_channel, (1,1), padding='same', activation='relu')(skip_out)
         prediction = Conv2D(self.a_channel, (1,1), padding='same')(skip_out)
         prediction = Flatten()(prediction)
-        prediction = Dense(self.img_rows, activation='softmax')(prediction)
+        #prediction = Dense(self.img_rows, activation='softmax')(prediction)
+        prediction = Dense(self.img_rows, activation='sigmoid')(prediction)
 
         model_wavenet = Model(inputs, prediction)
 
         model_wavenet.compile(
             optimizer='adam',
-            loss='categorical_crossentropy',
+            #loss='categorical_crossentropy',
+            loss='binary_crossentropy',
             metrics=['accuracy']
         )
         model_wavenet.summary()
@@ -78,9 +81,12 @@ class MelCNN(object):
 
     def train(self, x, y, epochs=200, batch_size=16):
         ## -----*----- 学習 -----*----- ##
-        self.model.fit(x, y, epochs=epochs, batch_size=batch_size)
+        for step in range(epochs // 10):
+            self.model.fit(x, y, initial_epoch=step * 10, epochs=(step + 1) * 10, batch_size=100)
+            self.model.save_weights(self.model_path.replace('.hdf5', '_{0}.hdf5'.format((step + 1))))
 
-        self.model.save_weights('model/model.h5')
+        # 最終の学習モデルを保存
+        self.model.save_weights(self.model_path)
 
 
 
