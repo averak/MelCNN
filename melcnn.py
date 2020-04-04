@@ -2,16 +2,20 @@
 '''
 Blind sound source separation of multiple speakers on a single channel with GAN.
 '''
+import numpy as np
 import tensorflow.keras
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Activation, Dropout, Input, Multiply, Add, Lambda, Conv2D, Flatten
+import librosa
+from scipy import signal
+import yaml
 
 
 class MelCNN(object):
-    def __init__(self):
+    def __init__(self, size):
         ## -----*----- コンストラクタ -----*----- ##
         self.filter_size = 2
-        self.img_rows = 8000
+        self.img_rows = size
         self.img_columns = 1
         #self.a_channel = 256
         self.a_channel = 1
@@ -22,6 +26,7 @@ class MelCNN(object):
         self.n_layer = 10
         self.dilation = [2 ** i for i in range(10)] * 4
 
+        self.model_path = 'model/model.h5'
         self.model = self.wavenet()
 
 
@@ -58,13 +63,15 @@ class MelCNN(object):
         skip_out = Conv2D(self.a_channel, (1,1), padding='same', activation='relu')(skip_out)
         prediction = Conv2D(self.a_channel, (1,1), padding='same')(skip_out)
         prediction = Flatten()(prediction)
-        prediction = Dense(8000, activation='softmax')(prediction)
+        #prediction = Dense(self.img_rows, activation='softmax')(prediction)
+        prediction = Dense(self.img_rows, activation='sigmoid')(prediction)
 
         model_wavenet = Model(inputs, prediction)
 
         model_wavenet.compile(
             optimizer='adam',
-            loss='categorical_crossentropy',
+            #loss='categorical_crossentropy',
+            loss='binary_crossentropy',
             metrics=['accuracy']
         )
         model_wavenet.summary()
@@ -74,7 +81,38 @@ class MelCNN(object):
 
     def train(self, x, y, epochs=200, batch_size=16):
         ## -----*----- 学習 -----*----- ##
-        self.model.fit(x, y, epochs=epochs, batch_size=batch_size)
+        for step in range(epochs // 10):
+            self.model.fit(x, y, initial_epoch=step * 10, epochs=(step + 1) * 10, batch_size=100)
+            self.model.save_weights(self.model_path.replace('.hdf5', '_{0}.hdf5'.format((step + 1))))
 
-        self.model.save_weights('model/model.h5')
+        # 最終の学習モデルを保存
+        self.model.save_weights(self.model_path)
+
+
+
+def transform(x, mu=256):
+    ## -----*----- μ-law変換 -----*----- ##
+    x = x.astype(np.float32)
+    y = np.sign(x) * np.log(1 + mu * np.abs(x)) / np.log(1 + mu)
+    y = np.digitize(y, 2 * np.arange(mu) / mu - 1) - 1
+    return y.astype(np.int32)
+
+
+def itransform(y, mu=256):
+    ## -----*----- 逆μ-law変換 -----*----- ##
+    y = y.astype(np.float32)
+    y = 2 * y / mu - 1
+    x = np.sign(y) / mu * ((1 + mu) ** np.abs(y) - 1)
+    return x.astype(np.float32)
+
+
+def to_spec(x, fs, to_log=True):
+    ## -----*----- スペクトログラム -----*----- ##
+    spec = signal.stft(x, fs=fs, nperseg=256)[2]
+
+    if to_log:
+        spec = np.where(spec == 0, 0.1 ** 10, spec)
+        spec = np.log10(np.abs(spec))
+
+    return spec
 
