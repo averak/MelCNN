@@ -8,7 +8,7 @@ from scipy import signal
 from melcnn import *
 
 
-CONFIG = yaml.load(open('config/wave.yml'))
+CONFIG = yaml.load(open('config/wave.yml'), Loader=yaml.SafeLoader)
 SIZE = int(CONFIG['wave']['fs'] * CONFIG['wave']['sec'])
 
 
