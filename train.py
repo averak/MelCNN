@@ -49,7 +49,7 @@ if __name__ == '__main__':
     n_data = max([len(target_waves), len(others_waves)])
 
     # 入力，正解ラベル
-    x, y = [], []
+    x1, x2, y = [], [], []
 
     for i in range(n_data):
         w1 = target_waves[i % len(target_waves)]
@@ -70,13 +70,15 @@ if __name__ == '__main__':
                 else:
                     mask.append(0)
 
-            x.append(mixed)
+            x1.append(mixed)
+            x2.append(i)
             y.append(mask)
 
-    x = np.array(x)
-    x = x.reshape((x.shape[0], x.shape[1], 1, 1))
-    y = np.array(y, dtype=np.int8)
+    x1 = np.array(x1)
+    x1 = x1.reshape((x1.shape[0], x1.shape[1], 1, 1))
+    x2 = np.array(x2)
+    y = np.array(y)
 
-    melcnn = MelCNN(x.shape[1])
-    melcnn.train(x, y)
+    melcnn = MelCNN(x1.shape[1])
+    melcnn.train([x1, x2], y)
 

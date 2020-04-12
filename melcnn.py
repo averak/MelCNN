@@ -5,7 +5,7 @@ Blind sound source separation of multiple speakers on a single channel with GAN.
 import numpy as np
 import tensorflow.keras
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Activation, Dropout, Input, Multiply, Add, Lambda, Conv2D, Flatten
+from tensorflow.keras.layers import Dense, Activation, Dropout, Input, Multiply, Add, Lambda, Conv2D, Flatten, concatenate
 import librosa
 from scipy import signal
 import yaml
@@ -17,7 +17,6 @@ class MelCNN(object):
         self.filter_size = 2
         self.img_rows = size
         self.img_columns = 1
-        #self.a_channel = 256
         self.a_channel = 1
         self.r_channels = 64
         self.s_channels = 256
@@ -57,22 +56,33 @@ class MelCNN(object):
 
 
     def build_nn(self):
-        inputs = Input(shape=(self.img_rows, self.img_columns, self.a_channel))
-        causal_conv = Conv2D(self.r_channels, (self.filter_size, 1), padding='same')(inputs)
+        input1 = Input(shape=(self.img_rows, self.img_columns, self.a_channel))
+        input2 = Input(shape=(1))
+
+        causal_conv = Conv2D(self.r_channels, (self.filter_size, 1), padding='same')(input1)
         skip_out_list = self.ResidualNet(causal_conv)
         skip_out = Add()(skip_out_list)
         skip_out = Activation('relu')(skip_out)
         skip_out = Conv2D(self.a_channel, (1,1), padding='same', activation='relu')(skip_out)
-        prediction = Conv2D(self.a_channel, (1,1), padding='same')(skip_out)
-        prediction = Flatten()(prediction)
-        #prediction = Dense(self.img_rows, activation='softmax')(prediction)
-        prediction = Dense(self.img_rows, activation='sigmoid')(prediction)
 
-        model = Model(inputs, prediction)
+        x = Conv2D(self.a_channel, (1,1), padding='same')(skip_out)
+        x = Flatten()(x)
+        x = Dense(64, activation='relu')(x)
+        x = Model(input1, x)
+
+        y = Dense(64, activation='relu')(input2)
+        y = Model(input2, y)
+
+        # 結合
+        combined = concatenate([x.output, y.output])
+        z = Dense(32, activation='relu')(combined)
+        z = Dense(self.img_rows, activation='sigmoid')(z)
+
+        # モデル定義とコンパイル
+        model = Model([x.input, y.input], z)
 
         model.compile(
             optimizer='adam',
-            #loss='categorical_crossentropy',
             loss='binary_crossentropy',
             metrics=['accuracy']
         )
@@ -87,7 +97,7 @@ class MelCNN(object):
         n_term = 10
         for step in range(epochs // n_term):
             self.model.fit(x, y, initial_epoch=step * n_term, epochs=(step + 1) * n_term, batch_size=100)
-            self.model.save_weights(self.model_path.replace('.hdf5', '_{0}.hdf5'.format((step + 1))))
+            self.model.save_weights(self.model_path.replace('.', '_{0}.'.format((step + 1))))
 
         # 最終の学習モデルを保存
         self.model.save_weights(self.model_path)
