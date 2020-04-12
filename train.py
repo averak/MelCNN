@@ -54,8 +54,8 @@ if __name__ == '__main__':
     for i in range(n_data):
         w1 = target_waves[i % len(target_waves)]
         w2 = others_waves[i % len(others_waves)]
-        spec1 = to_spec(w1, CONFIG['wave']['fs']).T
-        spec2 = to_spec(w2, CONFIG['wave']['fs']).T
+        spec1 = stft(w1, CONFIG['wave']['fs']).T
+        spec2 = stft(w2, CONFIG['wave']['fs']).T
 
         # 合成
         for i in range(spec1.shape[0]):

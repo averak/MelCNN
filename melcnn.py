@@ -27,7 +27,7 @@ class MelCNN(object):
         self.dilation = [2 ** i for i in range(10)] * 4
 
         self.model_path = 'model/model.h5'
-        self.model = self.wavenet()
+        self.model = self.build_nn()
 
 
     def ResidualBlock(self, block_in, dilation_index):
@@ -54,7 +54,7 @@ class MelCNN(object):
         return skip_out_list
 
 
-    def wavenet(self):
+    def build_nn(self):
         inputs = Input(shape=(self.img_rows, self.img_columns, self.a_channel))
         causal_conv = Conv2D(self.r_channels, (self.filter_size, 1), padding='same')(inputs)
         skip_out_list = self.ResidualNet(causal_conv)
@@ -66,17 +66,18 @@ class MelCNN(object):
         #prediction = Dense(self.img_rows, activation='softmax')(prediction)
         prediction = Dense(self.img_rows, activation='sigmoid')(prediction)
 
-        model_wavenet = Model(inputs, prediction)
+        model = Model(inputs, prediction)
 
-        model_wavenet.compile(
+        model.compile(
             optimizer='adam',
             #loss='categorical_crossentropy',
             loss='binary_crossentropy',
             metrics=['accuracy']
         )
-        model_wavenet.summary()
 
-        return model_wavenet
+        #model.summary()
+
+        return model
 
 
     def train(self, x, y, epochs=200, batch_size=16):
@@ -88,6 +89,16 @@ class MelCNN(object):
         # 最終の学習モデルを保存
         self.model.save_weights(self.model_path)
 
+
+    def vocoder(self, spec, mask):
+        ## -----*----- 音声を生成 -----*----- ##
+        for i, row in enumerate(mask):
+            spec[i] *= row
+
+        # 音声に戻す
+        wav = istft(spec.T)
+
+        return wav
 
 
 def transform(x, mu=256):
@@ -106,8 +117,8 @@ def itransform(y, mu=256):
     return x.astype(np.float32)
 
 
-def to_spec(x, fs, to_log=True):
-    ## -----*----- スペクトログラム -----*----- ##
+def stft(x, fs, to_log=True):
+    ## -----*----- 短時間フーリエ変換 -----*----- ##
     spec = signal.stft(x, fs=fs, nperseg=256)[2]
 
     if to_log:
@@ -116,3 +127,12 @@ def to_spec(x, fs, to_log=True):
 
     return spec
 
+
+def istft(spec, to_int=True):
+    ## -----*----- 逆短時間フーリエ変換 -----*----- ##
+    wav = signal.istft(spec, fs=self.rate, nperseg=256)[1]
+
+    if to_int:
+        wav = np.array(wav, dtype='int16')
+
+    return wav
