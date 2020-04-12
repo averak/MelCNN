@@ -12,10 +12,10 @@ import yaml
 
 
 class MelCNN(object):
-    def __init__(self, size):
+    def __init__(self):
         ## -----*----- コンストラクタ -----*----- ##
         self.filter_size = 2
-        self.img_rows = size
+        self.img_rows = 129
         self.img_columns = 1
         self.a_channel = 1
         self.r_channels = 64
@@ -38,9 +38,9 @@ class MelCNN(object):
         sigm_out = Conv2D(self.d_channels, (self.filter_size, 1), padding='same',
                           dilation_rate=(dilation_index, 1), activation='sigmoid')(block_in)
         marged = Multiply()([tanh_out, sigm_out])
-        res_out = Conv2D(self.r_channels, (1,1), padding='same')(marged)
-        skip_out = Conv2D(self.s_channels, (1,1), padding='same')(marged)
-        res_out = Add()([res_out,res])
+        res_out = Conv2D(self.r_channels, (1, 1), padding='same')(marged)
+        skip_out = Conv2D(self.s_channels, (1, 1), padding='same')(marged)
+        res_out = Add()([res_out, res])
 
         return res_out, skip_out
 
@@ -68,14 +68,17 @@ class MelCNN(object):
         x = Conv2D(self.a_channel, (1,1), padding='same')(skip_out)
         x = Flatten()(x)
         x = Dense(64, activation='relu')(x)
+        x = Dropout(0.5)(x)
         x = Model(input1, x)
 
         y = Dense(64, activation='relu')(input2)
+        y = Dropout(0.5)(y)
         y = Model(input2, y)
 
         # 結合
         combined = concatenate([x.output, y.output])
         z = Dense(32, activation='relu')(combined)
+        z = Dropout(0.5)(z)
         z = Dense(self.img_rows, activation='sigmoid')(z)
 
         # モデル定義とコンパイル
@@ -103,13 +106,29 @@ class MelCNN(object):
         self.model.save_weights(self.model_path)
 
 
-    def vocoder(self, spec, mask, to_int=True):
+    def load_model(self):
+        ## -----*----- 学習済みモデルを読み込み -----*----- ##
+        self.model.load_weights(self.config['path']['model'])
+
+
+    def vocoder(self, wav, to_int=True):
         ## -----*----- 音声を生成 -----*----- ##
+        spec = stft(wav, self.config['wave']['fs'], False).T
+        mask = []
+
+        # マスク推定
+        for i, row in enumerate(spec):
+            row = row.reshape((1, row.shape[0], 1, 1))
+            index = np.array([i])
+            mask.append(self.model.predict([row, index]))
+
+        mask = np.reshape(mask, (spec.shape[0], spec.shape[1]))
+
         for i, row in enumerate(mask):
-            spec[i] *= row
+            spec[i] *= np.round(row)
 
         # 音声に戻す
-        wav = istft(spec, self.config['wave']['fs'], to_int)
+        wav = istft(spec.T, self.config['wave']['fs'], to_int)
 
         return wav
 

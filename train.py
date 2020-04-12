@@ -79,6 +79,6 @@ if __name__ == '__main__':
     x2 = np.array(x2)
     y = np.array(y)
 
-    melcnn = MelCNN(x1.shape[1])
+    melcnn = MelCNN()
     melcnn.train([x1, x2], y)
 
