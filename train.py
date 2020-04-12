@@ -8,7 +8,7 @@ from scipy import signal
 from melcnn import *
 
 
-CONFIG = yaml.load(open('config/wave.yml'))
+CONFIG = yaml.load(open('config/wave.yml'), Loader=yaml.SafeLoader)
 SIZE = int(CONFIG['wave']['fs'] * CONFIG['wave']['sec'])
 
 
@@ -49,32 +49,36 @@ if __name__ == '__main__':
     n_data = max([len(target_waves), len(others_waves)])
 
     # 入力，正解ラベル
-    x, y = [], []
+    x1, x2, y = [], [], []
 
     for i in range(n_data):
         w1 = target_waves[i % len(target_waves)]
         w2 = others_waves[i % len(others_waves)]
-        spec1 = to_spec(w1, CONFIG['wave']['fs']).T
-        spec2 = to_spec(w2, CONFIG['wave']['fs']).T
+        spec1 = stft(w1, CONFIG['wave']['fs']).T
+        spec2 = stft(w2, CONFIG['wave']['fs']).T
 
         # 合成
         for i in range(spec1.shape[0]):
             mixed = spec1[i] + spec2[i]
-            x.append(mixed)
-            y.append(spec1[i])
-        '''
-        # 合成して正規化
-        mixed = w1 + w2
-        #mixed = sklearn.preprocessing.minmax_scale(mixed)
+            mixed = sklearn.preprocessing.minmax_scale(mixed)
 
-        x.append(mixed)
-        y.append(w1)
-        '''
+            # バイナリマスク
+            mask = []
+            for c1, c2 in zip(spec1[i], spec2[i]):
+                if c1 > c2:
+                    mask.append(1)
+                else:
+                    mask.append(0)
 
-    x = np.array(x)
-    x = x.reshape((x.shape[0], x.shape[1], 1, 1))
-    y = np.array(y, dtype=np.int8)
+            x1.append(mixed)
+            x2.append(i)
+            y.append(mask)
 
-    melcnn = MelCNN(x.shape[1])
-    melcnn.train(x, y)
+    x1 = np.array(x1)
+    x1 = x1.reshape((x1.shape[0], x1.shape[1], 1, 1))
+    x2 = np.array(x2)
+    y = np.array(y)
+
+    melcnn = MelCNN(x1.shape[1])
+    melcnn.train([x1, x2], y)
 
