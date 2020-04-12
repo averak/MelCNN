@@ -96,7 +96,7 @@ class MelCNN(object):
         ## -----*----- 学習 -----*----- ##
         n_term = 10
         for step in range(epochs // n_term):
-            self.model.fit(x, y, initial_epoch=step * n_term, epochs=(step + 1) * n_term, batch_size=100)
+            self.model.fit(x, y, initial_epoch=step * n_term, epochs=(step + 1) * n_term, batch_size=batch_size)
             self.model.save_weights(self.model_path.replace('.', '_{0}.'.format((step + 1))))
 
         # 最終の学習モデルを保存
