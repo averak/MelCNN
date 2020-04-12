@@ -23,7 +23,7 @@ class MelCNN(object):
         self.d_channels = 128
         self.n_loop = 4
         self.n_layer = 10
-        self.dilation = [2 ** i for i in range(10)] * 4
+        self.dilation = [2 ** i for i in range(self.n_layer)] * self.n_loop
 
         self.config = yaml.load(open('config/wave.yml'), Loader=yaml.SafeLoader)
 
@@ -68,11 +68,11 @@ class MelCNN(object):
         x = Conv2D(self.a_channel, (1,1), padding='same')(skip_out)
         x = Flatten()(x)
         x = Dense(64, activation='relu')(x)
-        x = Dropout(0.5)(x)
+        x = Dropout(0.25)(x)
         x = Model(input1, x)
 
         y = Dense(64, activation='relu')(input2)
-        y = Dropout(0.5)(y)
+        y = Dropout(0.25)(y)
         y = Model(input2, y)
 
         # 結合
@@ -95,11 +95,17 @@ class MelCNN(object):
         return model
 
 
-    def train(self, x, y, epochs=200, batch_size=64):
+    def train(self, x, y, epochs=200, batch_size=256):
         ## -----*----- 学習 -----*----- ##
         n_term = 10
         for step in range(epochs // n_term):
-            self.model.fit(x, y, initial_epoch=step * n_term, epochs=(step + 1) * n_term, batch_size=batch_size)
+            self.model.fit(
+                x, y,
+                initial_epoch=step * n_term,
+                epochs=(step + 1) * n_term,
+                batch_size=batch_size,
+                validation_split=0.2
+            )
             self.model.save_weights(self.model_path.replace('.', '_{0}.'.format((step + 1))))
 
         # 最終の学習モデルを保存
