@@ -26,7 +26,9 @@ class MelCNN(object):
         self.n_layer = 10
         self.dilation = [2 ** i for i in range(10)] * 4
 
-        self.model_path = 'model/model.h5'
+        self.config = yaml.load(open('config/wave.yml'), Loader=yaml.SafeLoader)
+
+        self.model_path = self.config['path']['model']
         self.model = self.build_nn()
 
 
@@ -90,13 +92,14 @@ class MelCNN(object):
         self.model.save_weights(self.model_path)
 
 
-    def vocoder(self, spec, mask):
+    def vocoder(self, spec, mask, to_int=True):
         ## -----*----- 音声を生成 -----*----- ##
         for i, row in enumerate(mask):
             spec[i] *= row
+            print(row)
 
         # 音声に戻す
-        wav = istft(spec.T)
+        wav = istft(spec, self.config['wave']['fs'], to_int)
 
         return wav
 
@@ -128,9 +131,9 @@ def stft(x, fs, to_log=True):
     return spec
 
 
-def istft(spec, to_int=True):
+def istft(spec, fs, to_int=True):
     ## -----*----- 逆短時間フーリエ変換 -----*----- ##
-    wav = signal.istft(spec, fs=self.rate, nperseg=256)[1]
+    wav = signal.istft(spec, fs=fs, nperseg=256)[1]
 
     if to_int:
         wav = np.array(wav, dtype='int16')

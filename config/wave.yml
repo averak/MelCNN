@@ -9,3 +9,5 @@ path:
     data/target/
   others:
     data/others/
+  model:
+    model/model.h5
