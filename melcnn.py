@@ -82,10 +82,11 @@ class MelCNN(object):
         return model
 
 
-    def train(self, x, y, epochs=200, batch_size=16):
+    def train(self, x, y, epochs=200, batch_size=64):
         ## -----*----- 学習 -----*----- ##
-        for step in range(epochs // 10):
-            self.model.fit(x, y, initial_epoch=step * 10, epochs=(step + 1) * 10, batch_size=100)
+        n_term = 10
+        for step in range(epochs // n_term):
+            self.model.fit(x, y, initial_epoch=step * n_term, epochs=(step + 1) * n_term, batch_size=100)
             self.model.save_weights(self.model_path.replace('.hdf5', '_{0}.hdf5'.format((step + 1))))
 
         # 最終の学習モデルを保存
@@ -96,7 +97,6 @@ class MelCNN(object):
         ## -----*----- 音声を生成 -----*----- ##
         for i, row in enumerate(mask):
             spec[i] *= row
-            print(row)
 
         # 音声に戻す
         wav = istft(spec, self.config['wave']['fs'], to_int)
