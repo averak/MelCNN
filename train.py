@@ -5,6 +5,7 @@ from glob import glob
 import sklearn
 import librosa
 from scipy import signal
+from tqdm import tqdm
 from melcnn import *
 
 
@@ -51,7 +52,7 @@ if __name__ == '__main__':
     # 入力，正解ラベル
     x1, x2, y = [], [], []
 
-    for i in range(n_data):
+    for i in tqdm(range(n_data)):
         w1 = target_waves[i % len(target_waves)]
         w2 = others_waves[i % len(others_waves)]
         spec1 = stft(w1, CONFIG['wave']['fs']).T
@@ -60,23 +61,10 @@ if __name__ == '__main__':
         # 合成
         for i in range(spec1.shape[0]):
             # Noiseの音量を上下
-            for snr in [0.5, 1.0, 2.0]:
+            for snr in [0.25, 0.5, 1.0, 2.0, 4.0]:
                 mixed = spec1[i] + (spec2[i] * snr)
                 mixed = sklearn.preprocessing.minmax_scale(mixed)
 
-                # ソフトマスク
-                mask = []
-                for c1, c2 in zip(spec1[i], (spec2[i] * snr)):
-                    print(c1 / (c1 + c2))
-                    if c1 < 0:
-                        print(c1)
-                        exit(0)
-                    if c1 > c2:
-                        mask.append(1)
-                    else:
-                        mask.append(0)
-                exit(0)
-                '''
                 # バイナリマスク
                 mask = []
                 for c1, c2 in zip(spec1[i], (spec2[i] * snr)):
@@ -84,7 +72,7 @@ if __name__ == '__main__':
                         mask.append(1)
                     else:
                         mask.append(0)
-                '''
+
                 x1.append(mixed)
                 x2.append(i)
                 y.append(mask)

@@ -22,7 +22,7 @@ class MelCNN(object):
         self.s_channels = 256
         self.d_channels = 128
         self.n_loop = 4
-        self.n_layer = 3
+        self.n_layer = 5
         self.dilation = [2 ** i for i in range(self.n_layer)] * self.n_loop
 
         self.config = yaml.load(open('config/wave.yml'), Loader=yaml.SafeLoader)
@@ -74,16 +74,14 @@ class MelCNN(object):
         skip_out = Conv2D(self.a_channel, (1, 1), padding='same', activation='relu')(skip_out)
         prediction = Conv2D(self.a_channel, (1, 1), padding='same')(skip_out)
         prediction = Flatten()(prediction)
-        #prediction = Dense(self.img_rows, activation='sigmoid')(prediction)
-        prediction = Dense(4, activation='softmax')(prediction)
+        prediction = Dense(self.img_rows, activation='sigmoid')(prediction)
 
         # モデル定義とコンパイル
         model = Model([input1, input2], prediction)
 
         model.compile(
             optimizer='adam',
-            loss='categorical_crossentropy',
-            #loss='binary_crossentropy',
+            loss='binary_crossentropy',
             metrics=['accuracy']
         )
 
