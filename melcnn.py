@@ -22,7 +22,7 @@ class MelCNN(object):
         self.s_channels = 256
         self.d_channels = 128
         self.n_loop = 4
-        self.n_layer = 5
+        self.n_layer = 3
         self.dilation = [2 ** i for i in range(self.n_layer)] * self.n_loop
 
         self.config = yaml.load(open('config/wave.yml'), Loader=yaml.SafeLoader)
@@ -62,9 +62,11 @@ class MelCNN(object):
         x1 = Dense(32)(input1)
         x1 = BatchNormalization()(x1)
         x1 = Activation('relu')(x1)
+        x1 = Dropout(0.5)(x1)
         x2 = Dense(32)(input2)
         x2 = BatchNormalization()(x2)
         x2 = Activation('relu')(x2)
+        x2 = Dropout(0.5)(x2)
         merge = Add()([x1, x2])
 
         causal_conv = Conv2D(self.r_channels, (self.filter_size, 1), padding='same')(merge)
@@ -92,7 +94,7 @@ class MelCNN(object):
 
     def train(self, x, y, epochs=200, batch_size=256):
         ## -----*----- 学習 -----*----- ##
-        n_term = 10
+        n_term = 1
         for step in range(epochs // n_term):
             self.model.fit(
                 x, y,
