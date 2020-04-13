@@ -59,20 +59,35 @@ if __name__ == '__main__':
 
         # 合成
         for i in range(spec1.shape[0]):
-            mixed = spec1[i] + spec2[i]
-            mixed = sklearn.preprocessing.minmax_scale(mixed)
+            # Noiseの音量を上下
+            for snr in [0.5, 1.0, 2.0]:
+                mixed = spec1[i] + (spec2[i] * snr)
+                mixed = sklearn.preprocessing.minmax_scale(mixed)
 
-            # バイナリマスク
-            mask = []
-            for c1, c2 in zip(spec1[i], spec2[i]):
-                if c1 > c2:
-                    mask.append(1)
-                else:
-                    mask.append(0)
-
-            x1.append(mixed)
-            x2.append(i)
-            y.append(mask)
+                # ソフトマスク
+                mask = []
+                for c1, c2 in zip(spec1[i], (spec2[i] * snr)):
+                    print(c1 / (c1 + c2))
+                    if c1 < 0:
+                        print(c1)
+                        exit(0)
+                    if c1 > c2:
+                        mask.append(1)
+                    else:
+                        mask.append(0)
+                exit(0)
+                '''
+                # バイナリマスク
+                mask = []
+                for c1, c2 in zip(spec1[i], (spec2[i] * snr)):
+                    if c1 > c2:
+                        mask.append(1)
+                    else:
+                        mask.append(0)
+                '''
+                x1.append(mixed)
+                x2.append(i)
+                y.append(mask)
 
     x1 = np.array(x1)
     x1 = x1.reshape((x1.shape[0], x1.shape[1], 1, 1))

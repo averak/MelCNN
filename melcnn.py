@@ -5,7 +5,7 @@ Blind sound source separation of multiple speakers on a single channel with GAN.
 import numpy as np
 import tensorflow.keras
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Activation, Dropout, Input, Multiply, Add, Lambda, Conv2D, Flatten, concatenate
+from tensorflow.keras.layers import Dense, Activation, Dropout, Input, Multiply, Add, Lambda, Conv2D, Flatten, BatchNormalization, concatenate
 import librosa
 from scipy import signal
 import yaml
@@ -22,7 +22,7 @@ class MelCNN(object):
         self.s_channels = 256
         self.d_channels = 128
         self.n_loop = 4
-        self.n_layer = 10
+        self.n_layer = 3
         self.dilation = [2 ** i for i in range(self.n_layer)] * self.n_loop
 
         self.config = yaml.load(open('config/wave.yml'), Loader=yaml.SafeLoader)
@@ -59,34 +59,31 @@ class MelCNN(object):
         input1 = Input(shape=(self.img_rows, self.img_columns, self.a_channel))
         input2 = Input(shape=(1))
 
-        causal_conv = Conv2D(self.r_channels, (self.filter_size, 1), padding='same')(input1)
+        x1 = Dense(32)(input1)
+        x1 = BatchNormalization()(x1)
+        x1 = Activation('relu')(x1)
+        x2 = Dense(32)(input2)
+        x2 = BatchNormalization()(x2)
+        x2 = Activation('relu')(x2)
+        merge = Add()([x1, x2])
+
+        causal_conv = Conv2D(self.r_channels, (self.filter_size, 1), padding='same')(merge)
         skip_out_list = self.ResidualNet(causal_conv)
         skip_out = Add()(skip_out_list)
         skip_out = Activation('relu')(skip_out)
-        skip_out = Conv2D(self.a_channel, (1,1), padding='same', activation='relu')(skip_out)
-
-        x = Conv2D(self.a_channel, (1,1), padding='same')(skip_out)
-        x = Flatten()(x)
-        x = Dense(64, activation='relu')(x)
-        x = Dropout(0.25)(x)
-        x = Model(input1, x)
-
-        y = Dense(64, activation='relu')(input2)
-        y = Dropout(0.25)(y)
-        y = Model(input2, y)
-
-        # 結合
-        combined = concatenate([x.output, y.output])
-        z = Dense(32, activation='relu')(combined)
-        z = Dropout(0.5)(z)
-        z = Dense(self.img_rows, activation='sigmoid')(z)
+        skip_out = Conv2D(self.a_channel, (1, 1), padding='same', activation='relu')(skip_out)
+        prediction = Conv2D(self.a_channel, (1, 1), padding='same')(skip_out)
+        prediction = Flatten()(prediction)
+        #prediction = Dense(self.img_rows, activation='sigmoid')(prediction)
+        prediction = Dense(4, activation='softmax')(prediction)
 
         # モデル定義とコンパイル
-        model = Model([x.input, y.input], z)
+        model = Model([input1, input2], prediction)
 
         model.compile(
             optimizer='adam',
-            loss='binary_crossentropy',
+            loss='categorical_crossentropy',
+            #loss='binary_crossentropy',
             metrics=['accuracy']
         )
 
@@ -162,6 +159,10 @@ def stft(x, fs, to_log=True):
     if to_log:
         spec = np.where(spec == 0, 0.1 ** 10, spec)
         spec = np.log10(np.abs(spec))
+        for i in range(spec.shape[0]):
+            for j in range(spec.shape[1]):
+                if spec[i][j] < 0.0:
+                    spec[i][j] = 0.0
 
     return spec
 
