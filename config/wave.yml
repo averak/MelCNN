@@ -2,7 +2,6 @@
 wave:
   fs: 8000
   sec: 0.25
-  classes: 5
 
 # Data Path Config
 path:
